@@ -1,0 +1,15 @@
+{
+  "name": "polis-plugin-feedback-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Backend container for the Polis Feedback plugin: feedback submission -> GitHub issue -> triage handoff.",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  }
+}

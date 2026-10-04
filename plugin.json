@@ -1,0 +1,78 @@
+{
+  "$schema": "https://polis.pomeloproductions.com/schemas/plugin.v1.json",
+  "name": "Feedback",
+  "slug": "feedback",
+  "version": "0.1.0",
+  "description": "In-app feedback widget that files a GitHub issue and hands the issue off to a local-runner Claude triage loop (PR-always; large changes need human approval).",
+  "image": "ghcr.io/pomeloproductions/polis-plugin-feedback:0.1.0",
+  "backend": {
+    "port": 8080,
+    "health": "/healthz",
+    "routes": [
+      { "method": "POST", "path": "/v1/feedback", "description": "Submit feedback -> create GitHub issue -> emit triage handoff." }
+    ]
+  },
+  "frontend": [
+    {
+      "bundle": "feedback-widget.js",
+      "space": "app-shell",
+      "component": "feedback-widget",
+      "key": "feedback",
+      "name": "Feedback",
+      "version": "0.1.0"
+    }
+  ],
+  "config_schema": {
+    "type": "object",
+    "required": ["FEEDBACK_GITHUB_TOKEN", "FEEDBACK_GITHUB_REPO"],
+    "properties": {
+      "FEEDBACK_GITHUB_TOKEN": {
+        "type": "string",
+        "secret": true,
+        "title": "GitHub token",
+        "description": "Token with `repo` / `issues` scope on the target repository."
+      },
+      "FEEDBACK_GITHUB_REPO": {
+        "type": "string",
+        "title": "Target repository",
+        "pattern": "^[^/]+/[^/]+$",
+        "description": "Repository that feedback issues are filed in, as `owner/name`."
+      },
+      "FEEDBACK_GITHUB_API_BASE": {
+        "type": "string",
+        "title": "GitHub API base",
+        "default": "https://api.github.com",
+        "description": "Override for GitHub Enterprise (e.g. https://ghe.internal/api/v3)."
+      },
+      "FEEDBACK_ISSUE_LABELS": {
+        "type": "string",
+        "title": "Issue labels",
+        "default": "feedback",
+        "description": "Comma-separated labels applied to every created issue."
+      },
+      "FEEDBACK_TRIAGE_WEBHOOK_URL": {
+        "type": "string",
+        "title": "Triage webhook URL",
+        "description": "Where the triage handoff is POSTed. If unset, the local runner is expected to poll issues instead."
+      },
+      "FEEDBACK_TRIAGE_WEBHOOK_SECRET": {
+        "type": "string",
+        "secret": true,
+        "title": "Triage webhook secret",
+        "description": "Shared secret; the handoff is signed with HMAC-SHA256 in the `X-Polis-Signature` header."
+      },
+      "FEEDBACK_LARGE_CHANGE_THRESHOLD": {
+        "type": "integer",
+        "title": "Large-change threshold",
+        "default": 1200,
+        "description": "Issue-body length over which a change is flagged `requires_approval` for the triage loop. 0 disables the heuristic."
+      },
+      "FEEDBACK_SHARED_SECRET": {
+        "type": "string",
+        "secret": true,
+        "title": "Frontend bearer secret",
+        "description": "Optional bearer the widget must send to the backend. Injected into both the backend env and the frontend bundle config by the controller."
+      }
+    }
+  }
+}
